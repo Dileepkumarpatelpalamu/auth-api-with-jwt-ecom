@@ -1,5 +1,5 @@
 import Joi from 'joi';
-const userValidator = Joi.object({
+const registerUserValidator = Joi.object({
   firstName: Joi.string().trim().required(),
   lastName: Joi.string().trim().required(),
   email: Joi.string().email().required(),
@@ -9,5 +9,10 @@ const userValidator = Joi.object({
   status: Joi.string().default('ACTIVE'),
   createdAt: Joi.date().default(() => new Date()),
 });
+const loginUserValidator = Joi.object({
+    email: Joi.string().email().required(),
+    password: Joi.string().required(),
 
-export default userValidator;
+})
+
+export {registerUserValidator,loginUserValidator};
