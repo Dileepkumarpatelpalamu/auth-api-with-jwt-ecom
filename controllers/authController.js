@@ -2,8 +2,9 @@ import User from "../models/userModel.js"
 import {registerUserValidator,loginUserValidator} from "../validatiors/userValidator.js"
 import CustomErrorHandler from "../services/customErrorHandler.js";
 import bcrypt from "bcrypt";
-import { getToken} from "../services/jwtToken.js";
+import { getToken, veryToken} from "../services/jwtToken.js";
 const JWT_SECRET = process.env.JWT_SECRET || "@get-user-password-hash-#123456";
+const JWT_REFRESHSECRET = process.env.JWT_REFRESHSECRET || "@post-password-hash-#79421636";
 class AuthController{
     static async login(req,res,next){
         const {error} = loginUserValidator.validate(req.body);
@@ -35,8 +36,10 @@ class AuthController{
             const user = new User(req.body);
             const response = await user.save();
             const payload = {_id:response._id,email:response.email,mobile_no:response.mobile_no,role:response.role};
-            const token = await getToken(payload,JWT_SECRET);
-            payload.token = token;
+            const accesstoken = await getToken(payload,JWT_SECRET);
+            const refreshtoken = await getToken(payload,JWT_REFRESHSECRET);
+            payload.accesstoken = accesstoken;
+            payload.refreshtoken = refreshtoken;
             return res.status(201).send({message:"User registered successfully",data:payload});
         }catch(err){
             return next(err);
@@ -49,6 +52,22 @@ class AuthController{
             return res.status(200).send({message:"User details",data:userDetails});
         }catch(err){
             return next(CustomErrorHandler.invalidToken());
+        }
+    }
+    static async refresh_token(req,res,next){
+        const {refreshtoken} =  req.body;
+        if(refreshtoken){
+            try{
+                const refreshStatus = await veryToken(refreshtoken,JWT_REFRESHSECRET);
+                const payload ={_id:refreshStatus._id,email:refreshStatus.email,mobile_no:refreshStatus.email,role:refreshStatus.role};
+                const accesstoken = await getToken(payload,JWT_SECRET);
+                return res.status(200).send({accesstoken}).json();
+            }catch(err){
+                return next(CustomErrorHandler.missingRefreshToken());
+            }
+        }
+        else{
+            return next(CustomErrorHandler.missingRefreshToken());
         }
     }
 }

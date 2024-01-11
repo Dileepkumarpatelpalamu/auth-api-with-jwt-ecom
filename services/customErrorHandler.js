@@ -16,5 +16,8 @@ class CustomErrorHandler extends Error {
     static invalidToken(message="Invalid Token..!"){
         return new CustomErrorHandler(401,message);
     }
+    static missingRefreshToken(message="Refresh token missing or invalid refresh token"){
+        return new CustomErrorHandler(401,message);
+    }
   }
   export default CustomErrorHandler
