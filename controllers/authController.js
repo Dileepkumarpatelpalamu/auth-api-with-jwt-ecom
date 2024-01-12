@@ -15,8 +15,10 @@ class AuthController{
             const password_matched = await bcrypt.compare(req.body.password,userExits.password);
             if (!password_matched) return next(CustomErrorHandler.incorrectPassword());
             const payload = {_id:userExits._id,email:userExits.email,mobile_no:userExits.mobile_no,role:userExits.role};
-            const token = await getToken(payload,JWT_SECRET);
-            payload.token = token;
+            const accesstoken = await getToken(payload,JWT_SECRET);
+            const refreshtoken = await getToken(payload,JWT_REFRESHSECRET);
+            payload.accesstoken = accesstoken;
+            payload.refreshtoken = refreshtoken;
             return res.status(200).send({message:"User loggedin successfully",data:payload});
         }catch(err){
             return next(err);

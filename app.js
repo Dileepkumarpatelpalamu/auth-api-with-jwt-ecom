@@ -1,6 +1,7 @@
 import express from 'express';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import cors from 'cors';
 import authRouter from './routers/authRouter.js';
 import errorHandler from './middlewares/errorHandler.js';
 import connectiondb from './configs/dbconnection.js';
@@ -11,6 +12,7 @@ connectiondb(mongoURI);
 const port = process.env.PORT || 5000;
 const host = process.env.HOST || "localhost";
 app.use(helmet());
+app.use(cors());
 app.use(express.json());
 app.use('/api',authRouter);
 app.use(errorHandler);
