@@ -72,5 +72,18 @@ class AuthController{
             return next(CustomErrorHandler.missingRefreshToken());
         }
     }
+    static async users_list(req,res,next){
+        const {_id,role} = req.body;
+        try{
+            if (_id !== undefined && role === "admin"){
+                const userDetails = await User.find().select('_id firstName lastName email mobile_no role status createdAt');
+                return res.status(200).send({message:"Users details",data:userDetails});
+            }else{
+                return next(CustomErrorHandler.onlyAdminAllowed());
+            }
+        }catch(err){
+            return next(CustomErrorHandler.invalidToken());
+        }
+    }
 }
 export default AuthController

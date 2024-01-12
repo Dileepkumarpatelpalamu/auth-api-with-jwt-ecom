@@ -7,6 +7,9 @@ const auth = async(req,res,next)=>{
     try{
         const userStatus = await veryToken(authHeaderArr[1],JWT_SECRET);
         req.body._id = userStatus._id;
+        req.body.role = userStatus.role;
+        req.body.email = userStatus.email;
+        req.body.mobile_no = userStatus.mobile_no;
         next()
     }catch(err){
         return next(CustomErrorHandler.invalidToken());

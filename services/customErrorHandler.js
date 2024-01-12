@@ -19,5 +19,8 @@ class CustomErrorHandler extends Error {
     static missingRefreshToken(message="Refresh token missing or invalid refresh token"){
         return new CustomErrorHandler(401,message);
     }
+    static onlyAdminAllowed(message="Only admin allows to access..!"){
+        return new CustomErrorHandler(401,message);
+    }
   }
   export default CustomErrorHandler
