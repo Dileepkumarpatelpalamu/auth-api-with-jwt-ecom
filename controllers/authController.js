@@ -3,8 +3,11 @@ import {registerUserValidator,loginUserValidator} from "../validatiors/userValid
 import CustomErrorHandler from "../services/customErrorHandler.js";
 import bcrypt from "bcrypt";
 import { getToken, veryToken} from "../services/jwtToken.js";
+import dotenv from "dotenv";
+dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET || "@get-user-password-hash-#123456";
 const JWT_REFRESHSECRET = process.env.JWT_REFRESHSECRET || "@post-password-hash-#79421636";
+import {mailSender,generateOTP} from "../configs/mailconfig.js";
 class AuthController{
     static async login(req,res,next){
         const {error} = loginUserValidator.validate(req.body);
