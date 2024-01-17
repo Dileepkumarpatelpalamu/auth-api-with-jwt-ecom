@@ -12,7 +12,12 @@ const registerUserValidator = Joi.object({
 const loginUserValidator = Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().required(),
+});
 
-})
-
-export {registerUserValidator,loginUserValidator};
+const updateUserValidator = Joi.object({
+  firstName: Joi.string().trim().required(),
+  lastName: Joi.string().trim().required(),
+  email: Joi.string().email().required(),
+  mobile_no: Joi.string().required(),
+});
+export {registerUserValidator,loginUserValidator,updateUserValidator};

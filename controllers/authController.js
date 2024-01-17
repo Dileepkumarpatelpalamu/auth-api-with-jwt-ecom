@@ -1,5 +1,5 @@
 import User from "../models/userModel.js"
-import {registerUserValidator,loginUserValidator} from "../validatiors/userValidator.js"
+import {registerUserValidator,loginUserValidator, updateUserValidator} from "../validatiors/userValidator.js"
 import CustomErrorHandler from "../services/customErrorHandler.js";
 import bcrypt from "bcrypt";
 import { getToken, veryToken} from "../services/jwtToken.js";
@@ -27,7 +27,6 @@ class AuthController{
             return next(err);
         }
     }
-
     static async register(req,res,next){
         const {error} = registerUserValidator.validate(req.body);
         if (error) return next(error);
@@ -56,6 +55,48 @@ class AuthController{
             const userDetails = await User.findOne({_id:_id}).select('_id firstName lastName email mobile_no role status createdAt');
             return res.status(200).send({message:"User details",data:userDetails});
         }catch(err){
+            return next(CustomErrorHandler.invalidToken());
+        }
+    }
+    static async update_user_details(req,res,next){
+        try{
+            const ID = req.body._id;
+            delete req.body._id;
+            const {firstName,lastName,email,mobile_no} = req.body;
+            const updateObject = {firstName,lastName,email,mobile_no};
+            const {error} = updateUserValidator.validate(req.body);
+            console.log(error);
+            if (error) return next(error);
+            let userDetails = await User.findByIdAndUpdate({_id:ID},updateObject,{new:true}).select('_id firstName lastName email mobile_no role status createdAt');
+            if(userDetails){
+                return res.status(200).send({message:"User details updated",data:userDetails})
+            }
+            else{
+                return next(CustomErrorHandler.invalidToken('Invalid user id'));
+            }
+        }catch(err){
+            console.log(err);
+            return next(CustomErrorHandler.invalidToken());
+        }
+    }
+    static async delete_user_details(req,res,next){
+        try{
+            const ID = req.body._id;
+            const deleted_id = req.params.ID;
+            const role =  req.body.role
+            if( ID != "" && role ==='admin' && deleted_id != ""){
+                let userDetails = await User.findByIdAndDelete(deleted_id).select('_id firstName lastName email mobile_no role status createdAt');
+                if(userDetails){
+                    return res.status(200).send({message:"Deleted user details updated",data:userDetails})
+                }
+                else{
+                    return next(CustomErrorHandler.invalidToken('Invalid user id'));
+                }
+            }else{
+                return next(CustomErrorHandler.onlyAdminAllowed("Agent can't be allowed..!"))
+            }
+        }catch(err){
+            console.log(err);
             return next(CustomErrorHandler.invalidToken());
         }
     }

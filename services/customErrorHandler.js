@@ -22,5 +22,8 @@ class CustomErrorHandler extends Error {
     static onlyAdminAllowed(message="Only admin allows to access..!"){
         return new CustomErrorHandler(401,message);
     }
+    static requiredParameterMissing(message="Required parameter missing..!"){
+        return new CustomErrorHandler(401,message);
+    }
   }
   export default CustomErrorHandler
