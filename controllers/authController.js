@@ -7,7 +7,9 @@ import dotenv from "dotenv";
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET || "@get-user-password-hash-#123456";
 const JWT_REFRESHSECRET = process.env.JWT_REFRESHSECRET || "@post-password-hash-#79421636";
+const DEFUAULT_LOGOUT_TIME = process.env.DEFAULTLOGOUTTIME || 3600
 import {mailSender,generateOTP} from "../configs/mailconfig.js";
+import redisConnection from "../configs/redisConnection.js";
 class AuthController{
     static async login(req,res,next){
         const {error} = loginUserValidator.validate(req.body);
@@ -20,10 +22,13 @@ class AuthController{
             const payload = {_id:userExits._id,email:userExits.email,mobile_no:userExits.mobile_no,role:userExits.role};
             const accesstoken = await getToken(payload,JWT_SECRET);
             const refreshtoken = await getToken(payload,JWT_REFRESHSECRET);
+            const data  = await redisConnection.set(`USERID-${userExits._id}`,JSON.stringify({accesstoken,refreshtoken}));
+            await redisConnection.expire(`USERID-${userExits._id}`,DEFUAULT_LOGOUT_TIME);
             payload.accesstoken = accesstoken;
             payload.refreshtoken = refreshtoken;
             return res.status(200).send({message:"User loggedin successfully",data:payload});
         }catch(err){
+            console.log(err);
             return next(err);
         }
     }
@@ -42,6 +47,8 @@ class AuthController{
             const payload = {_id:response._id,email:response.email,mobile_no:response.mobile_no,role:response.role};
             const accesstoken = await getToken(payload,JWT_SECRET);
             const refreshtoken = await getToken(payload,JWT_REFRESHSECRET);
+            const data  = await redisConnection.set(`USERID-${userExits._id}`,JSON.stringify({accesstoken,refreshtoken}));
+            await redisConnection.expire(`USERID-${response._id}`,DEFUAULT_LOGOUT_TIME);
             payload.accesstoken = accesstoken;
             payload.refreshtoken = refreshtoken;
             return res.status(201).send({message:"User registered successfully",data:payload});
@@ -126,6 +133,34 @@ class AuthController{
                 return next(CustomErrorHandler.onlyAdminAllowed());
             }
         }catch(err){
+            return next(CustomErrorHandler.invalidToken());
+        }
+    }
+    static async logout_users(req,res,next){
+        try{
+            const ID = req.body._id;
+            const role =  req.body.role
+            let logOutStatus = '';
+            if( role ==='admin'){
+                logOutStatus  =  await redisConnection.del(`USERID-${ID}`);
+                if(logOutStatus === 1){
+                    return res.status(200).send({message:"User logout successfully"}).json()
+                }else{
+                    return res.status(401).send({message:"user logout errors"}).json();
+                }
+            }else if(role === 'agent'){
+                logOutStatus  =  await redisConnection.del(`USERID-${ID}`);
+                if (logOutStatus === 1){
+                    return res.status(200).send({message:"User logout successfully"}).json()
+                }else{
+                    return res.status(401).send({message:"user logout errors"}).json();
+                }
+            }
+            else{
+                return next(CustomErrorHandler.onlyAdminAllowed("Agent can't be allowed..!"))
+            }
+        }catch(err){
+            console.log(err);
             return next(CustomErrorHandler.invalidToken());
         }
     }
